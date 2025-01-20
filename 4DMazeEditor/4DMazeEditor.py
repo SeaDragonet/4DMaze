@@ -19,7 +19,7 @@ GREEN = (0, 255, 0)
 PURPLE = (255, 0, 255)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-GRaY = (128, 128, 128)
+GRAY = (128, 128, 128)
 font = pygame.font.Font('arial.ttf', 32)
 
 
@@ -36,9 +36,9 @@ IsOverview = False
  
 # Setup a 300x300 pixel display with caption
 DISPLAYSURF = pygame.display.set_mode(((GRIDSIZE*10),(GRIDSIZE*10+50)))
-DISPLAYSURF.fill(GRaY)
+DISPLAYSURF.fill(GRAY)
 
-caption = ["It's 4D!", "It's what the cool kids play.", "Help! I am trapped in a 4D maze!", "Hyper Dimensional!", "Press alt f4 to get out of the maze!", "Be glad I made this 10/10/3/3 and not 10/10/10/10.", "Ello there world!", "Not GREY, GRaY!"]
+caption = ["It's 4D!", "It's what the cool kids play.", "Help! I am trapped in a 4D maze!", "Hyper Dimensional!", "Press alt f4 to get out of the maze!", "Be glad I made this 10/10/3/3 and not 10/10/10/10.", "Ello there world!", "Not GREY, GRAY!"]
 
 pygame.display.set_caption(caption[random.randint(0, 8)])
 SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.get_surface().get_size()
@@ -134,7 +134,7 @@ def DrawLayer(board, z, w):
 def DrawText(x, y, txt):
     # create a text surface object,
     # on which text is drawn on it.
-    text = font.render(txt, True, BLACK, GRaY)
+    text = font.render(txt, True, BLACK, GRAY)
     
     # create a rectangular object for the
     # text surface object
@@ -262,7 +262,7 @@ def DrawLayer2(board, z, w, px, py, scale):
 
 def Overview(board, screensize):
     scale = .3
-    DISPLAYSURF.fill(GRaY)
+    DISPLAYSURF.fill(GRAY)
     for i in range(sizew):
         px = i * GRIDSIZE * scale * (sizex+1)
         for j in range(sizez):
