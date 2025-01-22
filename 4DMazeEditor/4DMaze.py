@@ -38,6 +38,11 @@ DOWN = 5
 ANA = 6
 KATA = 7
 
+# Define the arrows
+ARROWUP = ((16, 14), (25, 5), (34, 14))
+ARROWDOWN = ((34, 36), (25, 45), (16, 36))
+ARROWANA = ((36, 16), (45, 25), (36, 34))
+ARROWKATA = ((14, 34), (5, 25), (14, 16))
 
 # Define grid coords and grid size
 GRIDSIZE = 50
@@ -158,13 +163,18 @@ class BoardView():
                 else:
                     pygame.draw.rect(DISPLAYSURF, WHITE, Rect(x*GRIDSIZE, y*GRIDSIZE, GRIDSIZE, GRIDSIZE))
                     if layer[y][x] & 2:
-                        pygame.draw.polygon(DISPLAYSURF, RED, ((x*GRIDSIZE+16, y*GRIDSIZE+14), (x*GRIDSIZE+25, y*GRIDSIZE+5), (x*GRIDSIZE+34, y*GRIDSIZE+14)), 2)
+                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, RED, ARROWUP, 2)
                     if layer[y][x] & 4:
-                        pygame.draw.polygon(DISPLAYSURF, GREEN, ((x*GRIDSIZE+34, y*GRIDSIZE+36), (x*GRIDSIZE+25, y*GRIDSIZE+45), (x*GRIDSIZE+16, y*GRIDSIZE+36)), 2)
+                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, GREEN, ARROWDOWN, 2)
                     if layer[y][x] & 8:
-                        pygame.draw.polygon(DISPLAYSURF, BLUE, ((x*GRIDSIZE+36, y*GRIDSIZE+16), (x*GRIDSIZE+45, y*GRIDSIZE+25), (x*GRIDSIZE+36, y*GRIDSIZE+34)), 2)
+                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, BLUE, ARROWANA, 2)
                     if layer[y][x] & 16:
-                        pygame.draw.polygon(DISPLAYSURF, PURPLE, ((x*GRIDSIZE+14, y*GRIDSIZE+34), (x*GRIDSIZE+5, y*GRIDSIZE+25), (x*GRIDSIZE+14, y*GRIDSIZE+16)), 2)
+                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, PURPLE, ARROWKATA, 2)
+    def DrawArrow(self, x, y, scale, color, points):
+        pts = []
+        for p in points:
+            pts.append((p[0]*scale + x, p[1]*scale + y))
+        pygame.draw.polygon(DISPLAYSURF, color, pts, 2)
 
 class BoardController():
     def __init__(self,model,location):
@@ -192,4 +202,11 @@ class BoardController():
             if key == K_e:
                 self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, VICTORY)
 
-        
+def main():
+    gameLocation = Location()
+    gameBoardModel = BoardModel()
+    gameBoardController = BoardController(gameBoardModel, gameLocation)
+    gameBoardView = BoardView(gameBoardModel, gameLocation)
+    gamePlayer = Player(gameLocation)
+
+    gameBoardView.drawLayer()
