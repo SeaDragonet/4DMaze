@@ -109,11 +109,9 @@ class Player(pygame.sprite.Sprite):
         global IsOverview
         if IsOverview:
             pygame.transform.scale()
-            
         else:
             self.rect.centerx = (self.location.x * GRIDSIZE + (0.5 * GRIDSIZE))
             self.rect.centery = (self.location.y * GRIDSIZE + (0.5 * GRIDSIZE))
- 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
@@ -180,27 +178,40 @@ class BoardController():
     def __init__(self,model,location):
         self.model = model
         self.location = location
-    def editBoard(self, key, mod):
+    def editBoard(self, key):
         if key == K_SPACE: 
             if not self.model.isOpen(self.location.x, self.location.y, self.location.z, self.location.w):
                 self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, OPEN)
-        if mod & 3 != 0:
-            if key == K_UP and self.model.inBounds(self.location.x,self.location.y,self.location.z-1,self.location.w):
-                self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALUP)
-                self.model.toggleState(self.location.x, self.location.y, self.location.z-1, self.location.w, PORTALDOWN)
-            if key == K_DOWN and self.model.inBounds(self.location.x,self.location.y,self.location.z+1,self.location.w):
-                self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALDOWN)
-                self.model.toggleState(self.location.x, self.location.y, self.location.z+1, self.location.w, PORTALUP)
-            if key == K_RIGHT and self.model.inBounds(self.location.x,self.location.y,self.location.z,self.location.w+1):
-                self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALANA)
-                self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w+1, PORTALKATA)
-            if key == K_LEFT and self.model.inBounds(self.location.x,self.location.y,self.location.z,self.location.w-1):
-                self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALKATA)
-                self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w-1, PORTALANA)
-            if key == K_q:
-                self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, START)
-            if key == K_e:
-                self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, VICTORY)
+        if key == K_UP and self.model.inBounds(self.location.x,self.location.y,self.location.z-1,self.location.w):
+            self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALUP)
+            self.model.toggleState(self.location.x, self.location.y, self.location.z-1, self.location.w, PORTALDOWN)
+        if key == K_DOWN and self.model.inBounds(self.location.x,self.location.y,self.location.z+1,self.location.w):
+            self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALDOWN)
+            self.model.toggleState(self.location.x, self.location.y, self.location.z+1, self.location.w, PORTALUP)
+        if key == K_RIGHT and self.model.inBounds(self.location.x,self.location.y,self.location.z,self.location.w+1):
+            self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALANA)
+            self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w+1, PORTALKATA)
+        if key == K_LEFT and self.model.inBounds(self.location.x,self.location.y,self.location.z,self.location.w-1):
+            self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALKATA)
+            self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w-1, PORTALANA)
+        if key == K_q:
+            self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, START)
+        if key == K_e:
+            self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, VICTORY)
+
+def DrawText(x, y, txt):
+    # create a text surface object,
+    # on which text is drawn on it.
+    text = font.render(txt, True, BLACK, GRAY)
+    
+    # create a rectangular object for the
+    # text surface object
+    textRect = text.get_rect()
+    
+    # set the center of the rectangular object.
+    textRect.center = (x, y)
+
+    DISPLAYSURF.blit(text, textRect)
 
 def main():
     gameLocation = Location()
@@ -210,3 +221,37 @@ def main():
     gamePlayer = Player(gameLocation)
 
     gameBoardView.drawLayer()
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == KEYDOWN:
+                if event.key == K_a:
+                    gameLocation.move(WEST, gameBoardModel, gamePlayer)
+                if event.key == K_d:
+                    gameLocation.move(EAST, gameBoardModel, gamePlayer)
+                if event.key == K_w:
+                    gameLocation.move(NORTH, gameBoardModel, gamePlayer)
+                if event.key == K_s:
+                    gameLocation.move(SOUTH, gameBoardModel, gamePlayer)
+                if event.key == K_UP:
+                    gameLocation.move(UP, gameBoardModel, gamePlayer)
+                if event.key == K_DOWN:
+                    gameLocation.move(DOWN, gameBoardModel, gamePlayer)
+                if event.key == K_RIGHT:
+                    gameLocation.move(ANA, gameBoardModel, gamePlayer)
+                if event.key == K_LEFT:
+                    gameLocation.move(KATA, gameBoardModel, gamePlayer)
+            if event.mod & 3 != 0:
+                gameBoardController.editBoard(event.key)
+        gameBoardView.drawLayer()
+        gamePlayer.update()
+        gamePlayer.draw(DISPLAYSURF)
+        numtext = f"X={gameLocation.x}, Y={gameLocation.y}, Z={gameLocation.z}, W={gameLocation.w}, {gameLocation.x}/{gameLocation.y}/{gameLocation.z}/{gameLocation.w}"
+        DrawText((GRIDSIZE*5), (GRIDSIZE*10+25), "ello there world")
+        DrawText((GRIDSIZE*5), (GRIDSIZE*10+25), numtext)
+        pygame.display.update()
+        FramePerSec.tick(FPS)
+
+main()
