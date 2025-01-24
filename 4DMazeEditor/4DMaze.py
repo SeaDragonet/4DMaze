@@ -52,7 +52,7 @@ IsOverview = False
 # Setup a 300x300 pixel display with a caption
 DISPLAYSURF = pygame.display.set_mode(((GRIDSIZE*10),(GRIDSIZE*10+50)))
 DISPLAYSURF.fill(GRAY)
-caption = ["It's 4D!", "It's what the cool kids play.", "Help! I am trapped in a 4D maze!", "Hyper Dimensional!", "Press alt f4 to get out of the maze!", "Be glad I made this 10/10/3/3 and not 10/10/10/10.", "Ello there world!", "Your ana or my kata?"]
+caption = ["It's 4D!", "It's what the cool kids play.", "Help! I am trapped in a 4D maze!", "Hyper Dimensional!", "Press alt f4 to get out of the maze!", "Be glad I made this 10/10/3/3 and not 10/10/10/10.", "Ello there world!", "Your ana or my kata?", "TEMP FIX-REMOVE"]
 
 pygame.display.set_caption(caption[random.randint(0, 8)])
 SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.get_surface().get_size()
@@ -66,7 +66,7 @@ class Location():
         self.w = 0
     def move(self, direction, model, player):
         new = [self.x,self.y,self.z,self.w]
-        # Add check to see if 3 and 4d moves are valid
+        # Add check to see if 3 and 4d moves are on portals
         match direction:
             case 0:
                 new[0] += 1
@@ -83,20 +83,19 @@ class Location():
             case 6:
                 new[3] += 1
             case 7:
-                new[4] -= 1
+                new[3] -= 1
         if player.mode:
-            if model.inBounds(new) and model.isOpen(new):
+            if model.inBounds(new[0],new[1],new[2],new[3]) and model.isOpen(new[0],new[1],new[2],new[3]):
                 self.x, self.y, self.z, self.w = new
-            elif model.inBounds(new):
+        elif model.inBounds(new[0],new[1],new[2],new[3]):
                 self.x, self.y, self.z, self.w = new
-            else:
-                pass
+        else:
+            pass
 
 
 # Define the player classs
 class Player(pygame.sprite.Sprite):
     def __init__(self, location):
-        super.__init__()
         super().__init__() 
         self.player = pygame.image.load("Mr eyes.png").convert()
         self.image = pygame.image.load("titled.png").convert()
@@ -104,7 +103,7 @@ class Player(pygame.sprite.Sprite):
         self.surf = pygame.Surface((50, 50), pygame.SRCALPHA)
         self.rect = self.surf.get_rect()
         self.location = location
-        self.mode = 1
+        self.mode = 0
     def update(self):
         global IsOverview
         if IsOverview:
@@ -137,12 +136,14 @@ class BoardModel():
     def toggleState(self, x, y, z, w, state):
         self._gameboard[w][z][y][x] ^= state
     def inBounds(self, x, y, z, w):
-        return 0 <= x < self.sizex and 0 <= y < self.sizey and 0 <= y < self.sizey and 0 <= z < self.sizez
+        return 0 <= x < self.sizex and 0 <= y < self.sizey and 0 <= z < self.sizez and 0 <= w < self.sizew
     def stateCheck(self, x, y, z, w, state):
         if self._gameboard[w][z][y][x] & state > 0:
             return True
         else:
             return False
+    def getLayer(self,z,w):
+        return self._gameboard[w][z]
 
 
         
@@ -152,7 +153,7 @@ class BoardView():
         self.location = location
         self.model = model
     def drawLayer(self):
-        layer = self.model.getLayer(self.location.w, self.location.z)
+        layer = self.model.getLayer(self.location.z, self.location.w)
         for y in range (len(layer)):
             row = layer[y]
             for x in range (len(row)):
@@ -161,13 +162,13 @@ class BoardView():
                 else:
                     pygame.draw.rect(DISPLAYSURF, WHITE, Rect(x*GRIDSIZE, y*GRIDSIZE, GRIDSIZE, GRIDSIZE))
                     if layer[y][x] & 2:
-                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, RED, ARROWUP, 2)
+                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, RED, ARROWUP)
                     if layer[y][x] & 4:
-                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, GREEN, ARROWDOWN, 2)
+                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, GREEN, ARROWDOWN)
                     if layer[y][x] & 8:
-                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, BLUE, ARROWANA, 2)
+                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, BLUE, ARROWANA)
                     if layer[y][x] & 16:
-                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, PURPLE, ARROWKATA, 2)
+                        self.DrawArrow(x*GRIDSIZE, y*GRIDSIZE, 1, PURPLE, ARROWKATA)
     def DrawArrow(self, x, y, scale, color, points):
         pts = []
         for p in points:
@@ -182,12 +183,12 @@ class BoardController():
         if key == K_SPACE: 
             if not self.model.isOpen(self.location.x, self.location.y, self.location.z, self.location.w):
                 self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, OPEN)
-        if key == K_UP and self.model.inBounds(self.location.x,self.location.y,self.location.z-1,self.location.w):
+        if key == K_UP and self.model.inBounds(self.location.x,self.location.y,self.location.z+1,self.location.w):
             self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALUP)
-            self.model.toggleState(self.location.x, self.location.y, self.location.z-1, self.location.w, PORTALDOWN)
-        if key == K_DOWN and self.model.inBounds(self.location.x,self.location.y,self.location.z+1,self.location.w):
+            self.model.toggleState(self.location.x, self.location.y, self.location.z+1, self.location.w, PORTALDOWN)
+        if key == K_DOWN and self.model.inBounds(self.location.x,self.location.y,self.location.z-1,self.location.w):
             self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALDOWN)
-            self.model.toggleState(self.location.x, self.location.y, self.location.z+1, self.location.w, PORTALUP)
+            self.model.toggleState(self.location.x, self.location.y, self.location.z-1, self.location.w, PORTALUP)
         if key == K_RIGHT and self.model.inBounds(self.location.x,self.location.y,self.location.z,self.location.w+1):
             self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w, PORTALANA)
             self.model.toggleState(self.location.x, self.location.y, self.location.z, self.location.w+1, PORTALKATA)
@@ -235,16 +236,19 @@ def main():
                     gameLocation.move(NORTH, gameBoardModel, gamePlayer)
                 if event.key == K_s:
                     gameLocation.move(SOUTH, gameBoardModel, gamePlayer)
-                if event.key == K_UP:
-                    gameLocation.move(UP, gameBoardModel, gamePlayer)
-                if event.key == K_DOWN:
-                    gameLocation.move(DOWN, gameBoardModel, gamePlayer)
-                if event.key == K_RIGHT:
-                    gameLocation.move(ANA, gameBoardModel, gamePlayer)
-                if event.key == K_LEFT:
-                    gameLocation.move(KATA, gameBoardModel, gamePlayer)
-            if event.mod & 3 != 0:
-                gameBoardController.editBoard(event.key)
+                if event.key == K_SPACE:
+                    gameBoardController.editBoard(K_SPACE)
+                if event.mod & 3 != 0:
+                    gameBoardController.editBoard(event.key)
+                else:
+                    if event.key == K_UP:
+                        gameLocation.move(UP, gameBoardModel, gamePlayer)
+                    if event.key == K_DOWN:
+                        gameLocation.move(DOWN, gameBoardModel, gamePlayer)
+                    if event.key == K_RIGHT:
+                        gameLocation.move(ANA, gameBoardModel, gamePlayer)
+                    if event.key == K_LEFT:
+                        gameLocation.move(KATA, gameBoardModel, gamePlayer)
         gameBoardView.drawLayer()
         gamePlayer.update()
         gamePlayer.draw(DISPLAYSURF)
