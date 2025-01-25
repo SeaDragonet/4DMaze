@@ -52,7 +52,7 @@ IsOverview = False
 # Setup a 300x300 pixel display with a caption
 DISPLAYSURF = pygame.display.set_mode(((GRIDSIZE*10),(GRIDSIZE*10+50)))
 DISPLAYSURF.fill(GRAY)
-caption = ["It's 4D!", "It's what the cool kids play.", "Help! I am trapped in a 4D maze!", "Hyper Dimensional!", "Press alt f4 to get out of the maze!", "Be glad I made this 10/10/3/3 and not 10/10/10/10.", "Ello there world!", "Your ana or my kata?", "TEMP FIX-REMOVE"]
+caption = ["It's 4D!", "It's what the cool kids play.", "Help! I am trapped in a 4D maze!", "Hyper Dimensional!", "Press alt f4 to get out of the maze!", "Be glad I made this 10/10/3/3 and not 10/10/10/10.", "Ello there world!", "Your ana or my ana?", "TEMP FIX-REMOVE"]
 
 pygame.display.set_caption(caption[random.randint(0, 8)])
 SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.get_surface().get_size()
@@ -77,14 +77,26 @@ class Location():
             case 3:
                 new[1] -= 1
             case 4:
-                new[2] += 1
+                if player.isEditor():
+                    new[2] += 1
+                elif model.stateCheck(self.x,self.y,self.z,self.w,PORTALUP):
+                    new[2] += 1
             case 5:
-                new[2] -= 1
+                if player.isEditor():
+                    new[2] -= 1
+                elif model.stateCheck(self.x,self.y,self.z,self.w,PORTALDOWN):
+                    new[2] -= 1
             case 6:
-                new[3] += 1
+                if player.isEditor():
+                    new[3] += 1
+                elif model.stateCheck(self.x,self.y,self.z,self.w,PORTALANA):
+                    new[3] += 1
             case 7:
-                new[3] -= 1
-        if player.mode:
+                if player.isEditor():
+                    new[3] -= 1
+                elif model.stateCheck(self.x,self.y,self.z,self.w,PORTALKATA):
+                    new[3] -= 1
+        if not player.isEditor():
             if model.inBounds(new[0],new[1],new[2],new[3]) and model.isOpen(new[0],new[1],new[2],new[3]):
                 self.x, self.y, self.z, self.w = new
         elif model.inBounds(new[0],new[1],new[2],new[3]):
@@ -113,6 +125,13 @@ class Player(pygame.sprite.Sprite):
             self.rect.centery = (self.location.y * GRIDSIZE + (0.5 * GRIDSIZE))
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+    def toggleMode(self):
+        self.mode ^= 1
+    def isEditor(self):
+        if self.mode == 1:
+            return True
+        else:
+            return False
 
 # Define the board class
 class BoardModel():
@@ -238,7 +257,9 @@ def main():
                     gameLocation.move(SOUTH, gameBoardModel, gamePlayer)
                 if event.key == K_SPACE:
                     gameBoardController.editBoard(K_SPACE)
-                if event.mod & 3 != 0:
+                if event.key == K_TAB:
+                    gamePlayer.toggleMode()
+                if event.mod & 3 != 0 and gamePlayer.isEditor():
                     gameBoardController.editBoard(event.key)
                 else:
                     if event.key == K_UP:
