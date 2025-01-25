@@ -1,8 +1,11 @@
 import pygame, sys
 from pygame.locals import *
 import random
+from tkinter import *
+import tkinter.filedialog, tkinter.messagebox
 
 # Initialize program
+Tk().withdraw()
 pygame.init()
  
 # Assign FPS a value
@@ -163,6 +166,10 @@ class BoardModel():
             return False
     def getLayer(self,z,w):
         return self._gameboard[w][z]
+    def getCell(self, x, y, z, w):
+        return self._gameboard[w][z][y][x]
+    def setLayer(self, z, w, layer):
+        self._gameboard[w][z] = layer
 
 
         
@@ -233,6 +240,34 @@ def DrawText(x, y, txt):
 
     DISPLAYSURF.blit(text, textRect)
 
+def save(gameboard, file):
+    # file = open(name, "w")
+    for i in range(gameboard.sizew):
+        for j in range(gameboard.sizez):
+            for k in range(gameboard.sizey):
+                for m in range(gameboard.sizex):
+                    print(gameboard.getCell(m, k, j, i), end=" ", file=file)
+                file.write("\n")
+                # row = board[i][j][k] 
+                # print(row, file = file)
+            file.write("\n")
+    file.close()
+
+def ReadLayer(gameboard, file):
+    layer = []
+    for k in range(gameboard.sizey):
+        line = file.readline()
+        items = line.split()
+        row = [int(s) for s in items]
+        layer.append(row)
+    file.readline()   # skip the separator line
+    return layer
+
+def LoadBoard(gameboard, file):
+    for i in range(gameboard.sizew):
+        for j in range(gameboard.sizez):
+            gameboard.setLayer(j, i, ReadLayer(gameboard, file))
+
 def main():
     gameLocation = Location()
     gameBoardModel = BoardModel()
@@ -255,6 +290,15 @@ def main():
                     gameLocation.move(NORTH, gameBoardModel, gamePlayer)
                 if event.key == K_s:
                     gameLocation.move(SOUTH, gameBoardModel, gamePlayer)
+                if event.key == K_p:
+                    file = tkinter.filedialog.asksaveasfile()
+                    if file:
+                        save(gameBoardModel, file)
+                if event.key == K_o:
+                    name = tkinter.filedialog.askopenfilename()
+                    if name != "":
+                        file = open(name)
+                        LoadBoard(gameBoardModel, file)  
                 if event.key == K_SPACE:
                     gameBoardController.editBoard(K_SPACE)
                 if event.key == K_TAB:
